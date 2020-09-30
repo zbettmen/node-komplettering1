@@ -10,7 +10,6 @@ http.createServer(respond).listen(port, () => {
 
 function respond(req, response) {
   let params = url.parse(req.url, true);
-
   if (params.query.key == secretKey) {
     fs.readFile("./secret.html", { encoding: "utf8" }, (err, data) => {
       if (err) {
