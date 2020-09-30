@@ -1,32 +1,60 @@
-const http = require("http");
-const url = require("url");
-const fs = require("fs");
-const port = 3000;
-let secretKey = "ALBATROSS";
-
-http.createServer(respond).listen(port, () => {
-  console.log("Server running at: " + port);
-});
-
-function respond(req, response) {
-  let params = url.parse(req.url, true);
-  if (params.query.key == secretKey) {
-    fs.readFile("./secret.html", { encoding: "utf8" }, (err, data) => {
-      if (err) {
-        console.log(err);
-      } else {
-        const content = data;
-        response.end(content);
+const express = require('express');
+const { response } = require('express');
+const personnummer = require("personnummer.js");
+const bodyParser = require('body-parser');
+const path = require('path');
+const app = express();
+app.set('query parser', 'simple')
+app.get('/secret', (req, res) => {
+  const query = new URLSearchParams(req.query)
+  if (query.has('key')) {
+    const key = query.get('key');
+    if (key == 'secretKey') {
+      res.sendFile('secret.html', {root : __dirname});
+    }
+    else {
+      var options = {
+        root: path.join(__dirname, '.'),
+        dotfiles: 'deny',
+        headers: {
+          'x-timestamp': Date.now(),
+          'x-sent': true
+        }
       }
-    });
-  } else {
-    fs.readFile("./list.txt", { encoding: "utf8" }, (err, txtF) => {
-      if (err) {
-        console.log(err);
-      } else {
-        const txtFile = txtF;
-        response.end(txtFile);
-      }
-    });
+      res.sendFile('list.txt',options,(err)=>{
+        if(err){
+          res.send(err)
+        }
+        else{
+          console.log('File sent')
+        }
+      });
+    }
   }
-}
+  else{
+    res.send('Key is not provided please try again')
+  }
+})
+
+
+app.get('/*', (req, res) => {
+  const path = req.path;
+  if(path!='/favicon.ico' && path.length>1)
+  {
+    var socialNumberId=path.replace('/','');
+    if (personnummer.validate(socialNumberId)) {
+      res.sendFile('secret.html');
+    }
+    else {
+      res.send("Social NumberId is not valid, try again");
+    }
+  }
+  else{
+    res.send('You didn\'t provide any social number id')
+  }
+})
+// Listen to the App Engine-specified port, or 8080 otherwise
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => {
+  console.log("Server listening on port ${PORT}...");
+});
