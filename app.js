@@ -4,24 +4,18 @@ const personnummer = require("personnummer.js");
 const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
+
 app.set('query parser', 'simple')
+
 app.get('/secret', (req, res) => {
   const query = new URLSearchParams(req.query)
   if (query.has('key')) {
     const key = query.get('key');
-    if (key == 'secretKey') {
+    if (key == 'ALBATROSS') {
       res.sendFile('secret.html', {root : __dirname});
     }
     else {
-      var options = {
-        root: path.join(__dirname, '.'),
-        dotfiles: 'deny',
-        headers: {
-          'x-timestamp': Date.now(),
-          'x-sent': true
-        }
-      }
-      res.sendFile('list.txt',options,(err)=>{
+      res.sendFile('list.txt', {root: path.join(__dirname, '.')}, (err) => {
         if(err){
           res.send(err)
         }
@@ -39,11 +33,14 @@ app.get('/secret', (req, res) => {
 
 app.get('/*', (req, res) => {
   const path = req.path;
-  if(path!='/favicon.ico' && path.length>1)
+
+  if(path != '/favicon.ico' && path.length>1)
   {
+    
+
     var socialNumberId=path.replace('/','');
     if (personnummer.validate(socialNumberId)) {
-      res.sendFile('secret.html');
+      res.sendFile('secret.html', {root : __dirname});
     }
     else {
       res.send("Social NumberId is not valid, try again");
@@ -54,7 +51,7 @@ app.get('/*', (req, res) => {
   }
 })
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Server listening on port ${PORT}...");
+  console.log(`Server listening on port ${PORT}...`);
 });
